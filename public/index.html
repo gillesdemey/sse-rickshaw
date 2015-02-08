@@ -1,0 +1,66 @@
+<!doctype html>
+<head>
+  <link type="text/css" rel="stylesheet" href="vendor/rickshaw/rickshaw.min.css">
+  <link type="text/css" rel="stylesheet" href="css/lines.css">
+
+  <script src="vendor/d3/d3.min.js"></script>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
+
+  <script src="vendor/rickshaw/rickshaw.js"></script>
+  <script src="js/Rickshaw.Graph.SSE.js"></script>
+</head>
+<body>
+
+<div id="chart_container">
+  <div id="chart"></div>
+  <div id="x_axis"></div>
+</div>
+
+<script>
+
+  var interval = 25;
+
+  // set up the graph
+  var graph = new Rickshaw.Graph({
+    element       : document.getElementById('chart'),
+    width         : 600,
+    height        : 200,
+    min           : 0,
+    max           : 100,
+    renderer      : 'line',
+    series        : new Rickshaw.Series.FixedDuration([{name : 'memory'}, {name : 'cpuload'}], undefined, {
+      timeInterval  : interval,
+      maxDataPoints : 200
+    })
+  });
+
+  // set up the x-axis
+  var x_ticks = new Rickshaw.Graph.Axis.X({
+    graph         : graph,
+    orientation   : 'bottom',
+    element       : document.getElementById('x_axis'),
+    pixelsPerTick : 200,
+    tickFormat    : function(t) {
+      return new Date(t * 1000).toLocaleTimeString();
+    }
+  });
+
+  graph.render();
+
+  // SSE connection
+  var source = new EventSource('http://localhost:3000/stream');
+
+  source.onmessage = function(e) {
+    var data = JSON.parse(e.data);
+    graph.series.addData(data);
+    graph.render();
+  };
+
+  source.onerror = function(e) {
+    source.close();
+  };
+
+</script>
+
+</body>
