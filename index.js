@@ -1,4 +1,5 @@
 var app = require('express')();
+var sse = require('connect-sse')();
 
 var os = require('os');
 
@@ -11,19 +12,14 @@ app.get('/', function(req, res) {
   res.sendfile('public/index.html');
 });
 
-app.get('/stream', function(req, res) {
-  res.type('text/event-stream');
+app.get('/stream', sse, function(req, res) {
 
   setInterval(function() {
-
     var data = {
       'memory': ((os.totalmem() - os.freemem()) / os.totalmem()) * 100,
       'cpuload': (os.loadavg()[0] / os.cpus().length) * 100,
     };
-
-    res.status(200)
-      .write('data: ' + JSON.stringify(data) + '\n\n');
-
+    res.json(data);
   }, 25);
 
 });
